@@ -1,9 +1,46 @@
 from flask import request, jsonify
 from app import app, db
-from models import LostItem, FoundItem
+from models import LostItem, FoundItem,User
 from datetime import datetime
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from datetime import datetime, timedelta
+
+
+@app.route('/users/register', methods=['OPTIONS'])
+def preflight():
+    response = jsonify({"message": "Preflight OK"})
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+    response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+    return response
+
+@app.route("/users/register", methods=["POST"])
+def register():
+    data = request.json
+    # response = jsonify({"message": "User registered successfully", "data": data})
+    # response.headers.add("Access-Control-Allow-Origin", "*")  # Allow all origins
+    # response.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+    # response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+    if User.query.filter_by(username=data['username']).first():
+        return jsonify({"error": "User already exists"}), 400
+    user = User(username=data['username'], password=data['password'])
+    db.session.add(user)
+    db.session.commit()
+    return jsonify({"message": "User registered successfully"}), 201
+
+@app.route("/users/login", methods=["POST"])
+def login():
+    data = request.json
+    user = User.query.filter_by(username=data['username'], password=data['password']).first()
+    if not user:
+        return jsonify({"error": "Invalid credentials"}), 401
+    access_token = create_access_token(identity=user.id, expires_delta=timedelta(hours=1))
+    return jsonify({"access_token": access_token}), 200
+
+
 
 @app.route("/lost-items/", methods=["POST"])
+@jwt_required()
 def report_lost_item():
     data = request.json
     lost_item = LostItem(
@@ -18,6 +55,7 @@ def report_lost_item():
     return jsonify({"message": "Lost item reported successfully"}), 201
 
 @app.route("/found-items/", methods=["POST"])
+@jwt_required()
 def report_found_item():
     data = request.json
     found_item = FoundItem(
