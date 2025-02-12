@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import Nav from "@/components/Nav";
 
 export default function MyItems() {
   const [lostItems, setLostItems] = useState([]);
@@ -22,7 +23,7 @@ export default function MyItems() {
       try {
         const config = {
           headers: {
-            Authorization: `Bearer ${token}`, // Make sure "Bearer" prefix is included
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         };
@@ -89,7 +90,9 @@ export default function MyItems() {
     <div className="bg-white rounded-lg shadow-md p-6 mb-4">
       <div className="flex justify-between items-start">
         <div>
-          <h3 className="text-xl font-semibold mb-2">{item.name}</h3>
+          <h3 className="text-xl text-gray-700 font-semibold mb-2">
+            {item.name}
+          </h3>
           <p className="text-gray-600 mb-2">{item.description}</p>
           <p className="text-sm text-gray-500">Location: {item.location}</p>
           <p className="text-sm text-gray-500">
@@ -115,34 +118,41 @@ export default function MyItems() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">My Items</h1>
+    <>
+      <Nav />
+      <div className="min-h-screen bg-gray-100 p-8">
+        <div className="max-w-6xl mx-auto">
+          <h1 className="text-6xl text-black font-bold mb-8">My Items</h1>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          <div>
-            <h2 className="text-2xl font-semibold mb-4">Lost Items</h2>
-            {lostItems.length === 0 ? (
-              <p className="text-gray-500">No lost items reported</p>
-            ) : (
-              lostItems.map((item) => (
-                <ItemCard key={item.id} item={item} type="lost" />
-              ))
-            )}
-          </div>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <h2 className="text-2xl text-black font-semibold mb-4">
+                Lost Items
+              </h2>
+              {lostItems.length === 0 ? (
+                <p className="text-gray-500">No lost items reported</p>
+              ) : (
+                lostItems.map((item) => (
+                  <ItemCard key={item.id} item={item} type="lost" />
+                ))
+              )}
+            </div>
 
-          <div>
-            <h2 className="text-2xl font-semibold mb-4">Found Items</h2>
-            {foundItems.length === 0 ? (
-              <p className="text-gray-500">No found items reported</p>
-            ) : (
-              foundItems.map((item) => (
-                <ItemCard key={item.id} item={item} type="found" />
-              ))
-            )}
+            <div>
+              <h2 className="text-2xl text-black font-semibold mb-4">
+                Found Items
+              </h2>
+              {foundItems.length === 0 ? (
+                <p className="text-gray-500">No found items reported</p>
+              ) : (
+                foundItems.map((item) => (
+                  <ItemCard key={item.id} item={item} type="found" />
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

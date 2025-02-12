@@ -34,22 +34,18 @@ def login():
 @app.route("/lost-items/", methods=["POST"])
 @jwt_required()
 def report_lost_item():
-    print(request.headers)  # Debugging line
-
+    print(request.headers) 
     try:
-        print("intry")
-        # Get current user's ID from JWT token
+        # print("intry")
         current_user_id = get_jwt_identity()
-        print("aftertry")
+        # print("aftertry")
 
-        # Get form data
         name = request.form.get("name")
         description = request.form.get("description")
         location = request.form.get("location")
         date_lost = request.form.get("date_lost")
         contact_info = request.form.get("contact_info")
         
-        # Handle image upload
         image = request.files.get('image')
         image_filename = None
         
@@ -58,7 +54,6 @@ def report_lost_item():
             image_filename = f"{int(time.time())}_{filename}"
             image.save(os.path.join(app.config['UPLOAD_FOLDER'], image_filename))
 
-        # Create lost item with user_id
         lost_item = LostItem(
             name=name,
             description=description,
@@ -78,22 +73,45 @@ def report_lost_item():
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
 
+
 @app.route("/found-items/", methods=["POST"])
 @jwt_required()
 def report_found_item():
     current_user_id = get_jwt_identity()
-    data = request.json
-    found_item = FoundItem(
-        name=data["name"],
-        description=data["description"],
-        location=data["location"],
-        date_found=datetime.strptime(data["date_found"], "%Y-%m-%d"),
-        contact_info=data["contact_info"],
-        user_id=current_user_id
-    )
-    db.session.add(found_item)
-    db.session.commit()
-    return jsonify({"message": "Found item reported successfully"}), 201
+
+    try:
+        name = request.form.get("name")
+        description = request.form.get("description")
+        location = request.form.get("location")
+        date_found = request.form.get("date_found")
+        contact_info = request.form.get("contact_info")
+        
+        image = request.files.get('image')
+        image_filename = None
+        
+        if image:
+            filename = secure_filename(image.filename)
+            image_filename = f"{int(time.time())}_{filename}"
+            image.save(os.path.join(app.config['UPLOAD_FOLDER'], image_filename))
+
+        found_item = FoundItem(
+            name=name,
+            description=description,
+            location=location,
+            date_found=datetime.strptime(date_found, "%Y-%m-%d"),
+            contact_info=contact_info,
+            image_filename=image_filename,
+            user_id=current_user_id
+        )
+        
+        db.session.add(found_item)
+        db.session.commit()
+        
+        return jsonify({"message": "Found item reported successfully"}), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 400
 
 @app.route("/lost-items/", methods=["GET"])
 def get_lost_items():
@@ -121,10 +139,11 @@ def get_found_items():
         "date_found": item.date_found.strftime("%Y-%m-%d"),
         "contact_info": item.contact_info,
         "user_id": item.user_id,
-        "reported_by": item.user.username
+        "reported_by": item.user.username,
+        "image": f"http://localhost:5000/uploads/{item.image_filename}" if item.image_filename else None,
+
     } for item in found_items]), 200
 
-# Add routes to get items by user
 @app.route("/my-lost-items/", methods=["GET"])
 @jwt_required()
 def get_my_lost_items():

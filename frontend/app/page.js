@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Nav from "@/components/Nav";
 
 export default function Home() {
   const [lostItems, setLostItems] = useState([]);
@@ -44,36 +45,7 @@ export default function Home() {
 
   return (
     <div className="container mx-auto p-4">
-      <nav className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">Lost & Found</h1>
-        <div>
-          {!token ? (
-            <>
-              <Link href="/login" className="mr-4 text-blue-500">
-                Login
-              </Link>
-              <Link href="/register" className="text-blue-500">
-                Register
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link href="/report" className="mr-4 text-blue-500">
-                Report Item
-              </Link>
-              <button
-                onClick={() => {
-                  localStorage.removeItem("token");
-                  router.push("/login");
-                }}
-                className="text-red-500"
-              >
-                Logout
-              </button>
-            </>
-          )}
-        </div>
-      </nav>
+      <Nav />
 
       <form onSubmit={handleLocationFilter} className="mb-8">
         <div className="flex gap-4">
@@ -108,13 +80,17 @@ export default function Home() {
           <h2 className="text-xl font-semibold mb-4">Lost Items</h2>
           <div className="space-y-4">
             {lostItems.map((item) => (
-              <div key={item.id} className="border p-4 rounded">
-                <h3 className="font-bold">{item.name}</h3>
-                <p>{item.description}</p>
-                <p>Location: {item.location}</p>
-                <p>Date Lost: {item.date_lost}</p>
-                <p>Contact: {item.contact_info}</p>
-                <img src={item.image}></img>
+              <div key={item.id} className="border flex flex-row p-4 rounded">
+                <div className="mb-4">
+                  <h3 className="font-bold">{item.name}</h3>
+                  <p>{item.description}</p>
+                  <p>Location: {item.location}</p>
+                  <p>Date Found: {item.date_found}</p>
+                  <p>Contact: {item.contact_info}</p>
+                </div>
+                <div className="m-auto">
+                  <img className="w-52" src={item.image}></img>
+                </div>
               </div>
             ))}
           </div>
@@ -124,12 +100,17 @@ export default function Home() {
           <h2 className="text-xl font-semibold mb-4">Found Items</h2>
           <div className="space-y-4">
             {foundItems.map((item) => (
-              <div key={item.id} className="border p-4 rounded">
-                <h3 className="font-bold">{item.name}</h3>
-                <p>{item.description}</p>
-                <p>Location: {item.location}</p>
-                <p>Date Found: {item.date_found}</p>
-                <p>Contact: {item.contact_info}</p>
+              <div key={item.id} className="border flex flex-row p-4 rounded">
+                <div className="mb-4">
+                  <h3 className="font-bold">{item.name}</h3>
+                  <p>{item.description}</p>
+                  <p>Location: {item.location}</p>
+                  <p>Date Found: {item.date_found}</p>
+                  <p>Contact: {item.contact_info}</p>
+                </div>
+                <div className="m-auto">
+                  <img className="w-52" src={item.image}></img>
+                </div>
               </div>
             ))}
           </div>

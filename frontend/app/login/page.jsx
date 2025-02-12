@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Nav from "@/components/Nav";
 
 export default function Login() {
   const [credentials, setCredentials] = useState({
@@ -27,39 +28,42 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-8 rounded shadow-md w-96"
-      >
-        <h2 className="text-2xl font-bold mb-6">Login</h2>
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="Username"
-            className="w-full p-2 border rounded"
-            onChange={(e) =>
-              setCredentials({ ...credentials, username: e.target.value })
-            }
-          />
-        </div>
-        <div className="mb-6">
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-full p-2 border rounded"
-            onChange={(e) =>
-              setCredentials({ ...credentials, password: e.target.value })
-            }
-          />
-        </div>
-        <button
-          type="submit"
-          className="w-full bg-blue-500 text-white p-2 rounded"
+    <>
+      <Nav />
+      <div className="min-h-screen flex items-center justify-center">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white p-8 rounded shadow-md w-96"
         >
-          Login
-        </button>
-      </form>
-    </div>
+          <h2 className="text-2xl text-black font-bold mb-6">Login</h2>
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Username"
+              className="w-full p-2 border rounded"
+              onChange={(e) =>
+                setCredentials({ ...credentials, username: e.target.value })
+              }
+            />
+          </div>
+          <div className="mb-6">
+            <input
+              type="password"
+              placeholder="Password"
+              className="w-full p-2 border rounded"
+              onChange={(e) =>
+                setCredentials({ ...credentials, password: e.target.value })
+              }
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-blue-500 text-white p-2 rounded"
+          >
+            Login
+          </button>
+        </form>
+      </div>
+    </>
   );
 }
