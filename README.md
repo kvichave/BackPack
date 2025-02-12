@@ -1,4 +1,3 @@
-Certainly! Here's a README file tailored for your project, [BackPack](https://github.com/kvichave/BackPack):
 
 ---
 
