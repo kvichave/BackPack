@@ -7,6 +7,8 @@ class LostItem(db.Model):
     location = db.Column(db.String(200), nullable=False)
     date_lost = db.Column(db.Date, nullable=False)
     contact_info = db.Column(db.String(100), nullable=False)
+    image_filename = db.Column(db.String(255), nullable=True)
+
 
 class FoundItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -15,6 +17,8 @@ class FoundItem(db.Model):
     location = db.Column(db.String(200), nullable=False)
     date_found = db.Column(db.Date, nullable=False)
     contact_info = db.Column(db.String(100), nullable=False)
+    image_filename = db.Column(db.String(255),nullable=True)
+
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
