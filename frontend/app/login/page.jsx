@@ -21,6 +21,7 @@ export default function Login() {
     if (res.ok) {
       const data = await res.json();
       localStorage.setItem("token", data.access_token);
+      console.log("TOKEN :: ", data.access_token);
       router.push("/");
     }
   };

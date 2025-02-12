@@ -7,21 +7,12 @@ from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 import time
 import os
-@app.route('/users/register', methods=['OPTIONS'])
-def preflight():
-    response = jsonify({"message": "Preflight OK"})
-    response.headers.add("Access-Control-Allow-Origin", "*")
-    response.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-    response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
-    return response
+
 
 @app.route("/users/register", methods=["POST"])
 def register():
     data = request.json
-    # response = jsonify({"message": "User registered successfully", "data": data})
-    # response.headers.add("Access-Control-Allow-Origin", "*")  # Allow all origins
-    # response.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-    # response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+  
     if User.query.filter_by(username=data['username']).first():
         return jsonify({"error": "User already exists"}), 400
     user = User(username=data['username'], password=data['password'])
@@ -35,15 +26,22 @@ def login():
     user = User.query.filter_by(username=data['username'], password=data['password']).first()
     if not user:
         return jsonify({"error": "Invalid credentials"}), 401
-    access_token = create_access_token(identity=user.id, expires_delta=timedelta(hours=1))
+    access_token = create_access_token(identity=str(user.id), expires_delta=timedelta(hours=1))
+    print(access_token)
     return jsonify({"access_token": access_token}), 200
 
 
-
 @app.route("/lost-items/", methods=["POST"])
-# @jwt_required()
+@jwt_required()
 def report_lost_item():
+    print(request.headers)  # Debugging line
+
     try:
+        print("intry")
+        # Get current user's ID from JWT token
+        current_user_id = get_jwt_identity()
+        print("aftertry")
+
         # Get form data
         name = request.form.get("name")
         description = request.form.get("description")
@@ -60,14 +58,15 @@ def report_lost_item():
             image_filename = f"{int(time.time())}_{filename}"
             image.save(os.path.join(app.config['UPLOAD_FOLDER'], image_filename))
 
-        # Create lost item
+        # Create lost item with user_id
         lost_item = LostItem(
             name=name,
             description=description,
             location=location,
             date_lost=datetime.strptime(date_lost, "%Y-%m-%d"),
             contact_info=contact_info,
-            image_filename=image_filename
+            image_filename=image_filename,
+            user_id=current_user_id
         )
         
         db.session.add(lost_item)
@@ -78,10 +77,11 @@ def report_lost_item():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
-    
+
 @app.route("/found-items/", methods=["POST"])
-# @jwt_required()
+@jwt_required()
 def report_found_item():
+    current_user_id = get_jwt_identity()
     data = request.json
     found_item = FoundItem(
         name=data["name"],
@@ -89,11 +89,11 @@ def report_found_item():
         location=data["location"],
         date_found=datetime.strptime(data["date_found"], "%Y-%m-%d"),
         contact_info=data["contact_info"],
+        user_id=current_user_id
     )
     db.session.add(found_item)
     db.session.commit()
     return jsonify({"message": "Found item reported successfully"}), 201
-
 
 @app.route("/lost-items/", methods=["GET"])
 def get_lost_items():
@@ -105,8 +105,9 @@ def get_lost_items():
         "location": item.location,
         "date_lost": item.date_lost.strftime("%Y-%m-%d"),
         "contact_info": item.contact_info,
-        "image": f"http://localhost:5000/uploads/{item.image_filename}" if item.image_filename else None
-        
+        "image": f"http://localhost:5000/uploads/{item.image_filename}" if item.image_filename else None,
+        "user_id": item.user_id,
+        "reported_by": item.user.username
     } for item in lost_items]), 200
 
 @app.route("/found-items/", methods=["GET"])
@@ -118,9 +119,40 @@ def get_found_items():
         "description": item.description,
         "location": item.location,
         "date_found": item.date_found.strftime("%Y-%m-%d"),
-        "contact_info": item.contact_info
+        "contact_info": item.contact_info,
+        "user_id": item.user_id,
+        "reported_by": item.user.username
     } for item in found_items]), 200
 
+# Add routes to get items by user
+@app.route("/my-lost-items/", methods=["GET"])
+@jwt_required()
+def get_my_lost_items():
+    current_user_id = get_jwt_identity()
+    lost_items = LostItem.query.filter_by(user_id=current_user_id).all()
+    return jsonify([{
+        "id": item.id,
+        "name": item.name,
+        "description": item.description,
+        "location": item.location,
+        "date_lost": item.date_lost.strftime("%Y-%m-%d"),
+        "contact_info": item.contact_info,
+        "image": f"http://localhost:5000/uploads/{item.image_filename}" if item.image_filename else None
+    } for item in lost_items]), 200
+
+@app.route("/my-found-items/", methods=["GET"])
+@jwt_required()
+def get_my_found_items():
+    current_user_id = get_jwt_identity()
+    found_items = FoundItem.query.filter_by(user_id=current_user_id).all()
+    return jsonify([{
+        "id": item.id,
+        "name": item.name,
+        "description": item.description,
+        "location": item.location,
+        "date_found": item.date_found.strftime("%Y-%m-%d"),
+        "contact_info": item.contact_info
+    } for item in found_items]), 200
 
 
 @app.route("/match-items/", methods=["GET"])
@@ -182,3 +214,5 @@ def lost_items_history():
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+
